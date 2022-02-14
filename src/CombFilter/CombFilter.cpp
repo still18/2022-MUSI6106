@@ -113,3 +113,21 @@ CCombFilterFIR::CCombFilterFIR(int fMaxDelayLengthInSamples, int iNumChannels) :
 CCombFilterIIR::CCombFilterIIR(int fMaxDelayLengthInSamples, int iNumChannels) : CCombFilterBase(fMaxDelayLengthInSamples, iNumChannels)
 {}
 
+//got vtable errors if I didn't include these
+CCombFilterIIR::~CCombFilterIIR()
+{
+    for (int i = 0; i < m_iNumChannels; i++) {
+        delete[] m_ppRingBuff[i];
+    }
+    delete[] m_ppRingBuff;
+    m_ppRingBuff = 0;
+}
+
+CCombFilterFIR::~CCombFilterFIR()
+{
+    for (int i = 0; i < m_iNumChannels; i++) {
+        delete[] m_ppRingBuff[i];
+    }
+    delete[] m_ppRingBuff;
+    m_ppRingBuff = 0;
+}
