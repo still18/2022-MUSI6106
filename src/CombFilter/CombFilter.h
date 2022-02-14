@@ -3,6 +3,7 @@
 
 #include "ErrorDef.h"
 #include "CombFilterIf.h"
+#include "RingBuffer.h"
 
 
 /*! \brief base class for the comb filter (FIR & IIR)
@@ -13,8 +14,9 @@ public:
     
     //include essentials, don't need others
 
-    CCombFilterBase (int fMaxDelayLengthInFrames, int iNumChannels);
+    CCombFilterBase();
     virtual ~CCombFilterBase ();
+    explicit CCombFilterBase(int fMaxDelayLengthInSamples, int iNumChannels);
     
     /*! resets the internal variables (requires new call of init)
     \return Error_t
@@ -44,10 +46,14 @@ public:
 
 protected:
     //ringbuffer, num channels, etc
+    float           m_fGain;
+    int             m_iDelayInSamples;
+    int             m_iNumChannels;
+    int             m_iMaxDelayInSamples;
+    CRingBuffer<float>** m_ppRingBuff;
 
 private:
     CCombFilterBase (const CCombFilterBase& that);
-    //virtual ~CCombFilterBase();
 };
 
 
@@ -55,9 +61,10 @@ private:
 
 class CCombFilterFIR : public CCombFilterBase
 {
+public:
     //construct, deconstruct, process
-    //define in cpp
-    CCombFilterFIR (int fMaxDelayLengthInFrames, int iNumChannels);
+    CCombFilterFIR();
+    CCombFilterFIR(int fMaxDelayLengthInSamples, int iNumChannels);
     ~CCombFilterFIR();
     
     Error_t process (float **ppfInputBuffer, float ** ppfOutputBuffer, int iNumberOfFrames);
@@ -65,9 +72,10 @@ class CCombFilterFIR : public CCombFilterBase
 
 class CCombFilterIIR : public CCombFilterBase
 {
+public:
     //construct, deconstruct, process
-    //define in cpp
-    CCombFilterIIR (int fMaxDelayLengthInFrames, int iNumChannels);
+    CCombFilterIIR();
+    CCombFilterIIR(int fMaxDelayLengthInSamples, int iNumChannels);
     ~CCombFilterIIR();
     
     Error_t process (float **ppfInputBuffer, float ** ppfOutputBuffer, int iNumberOfFrames);

@@ -78,50 +78,45 @@ Error_t CCombFilterIf::destroy (CCombFilterIf*& pCCombFilter)
 Error_t CCombFilterIf::init (CombFilterType_t eFilterType, float fMaxDelayLengthInS, float fSampleRateInHz, int iNumChannels)
 {
     //depending on filter type, make m_comb.. IIR/FIR
-    //initialize (bIsInit..)
     m_bIsInitialized = true;
     m_fSampleRate = fSampleRateInHz;
-    m_iNumberofChannels = iNumChannels;
+    m_tFliterType = eFilterType;
+    
+    float maxDelayInSamples;
+    maxDelayInSamples = fMaxDelayLengthInS * fSampleRateInHz;
     
     switch (eFilterType)
     {
         case (kCombFIR):
             //call FIR constructor
-            //m_pCCombFilter = new
+            m_pCCombFilter = new CCombFilterFIR(maxDelayInSamples, iNumChannels);
             break;
         case (kCombIIR):
             //call IIR constructor
-            //m_pCCombFilter = new
+            m_pCCombFilter = new CCombFilterIIR(maxDelayInSamples, iNumChannels);
             break;
         default:
-            //call either
-            //m_pCCombFilter = new 
+            m_pCCombFilter = new CCombFilterFIR(maxDelayInSamples, iNumChannels);
             break;
     }
-    
-    //switch filtertype: then per type call constructor
-    //use the BaseCome pointer
-    
     
     return Error_t::kNoError;
 }
 
 Error_t CCombFilterIf::reset ()
 {
-    init(m_fFliterType, 1.0, 44100, 1);
+    init(m_tFliterType, 1.0, m_fSampleRate, 1);
     return Error_t::kNoError;
 }
 
 Error_t CCombFilterIf::process (float **ppfInputBuffer, float **ppfOutputBuffer, int iNumberOfFrames)
 {
-    m_pCCombFilter->process(ppfInputBuffer, ppfOutputBuffer, iNumberOfFrames);
-    return Error_t::kNoError;
+    return m_pCCombFilter->process(ppfInputBuffer, ppfOutputBuffer, iNumberOfFrames);
 }
 
 Error_t CCombFilterIf::setParam (FilterParam_t eParam, float fParamValue)
 {
-    m_pCCombFilter->setParam(eParam, fParamValue);
-    return Error_t::kNoError;
+    return m_pCCombFilter->setParam(eParam, fParamValue);
 }
 
 float CCombFilterIf::getParam (FilterParam_t eParam) const
