@@ -93,20 +93,6 @@ int main(int argc, char* argv[])
     
     
     
-    
-    
-
-    //////////////////////////////////////////////////////////////////////////////
-    // open the output text file
-//    hOutputFile.open(sOutputFilePath.c_str(), std::ios::out);
-//    if (!hOutputFile.is_open())
-//    {
-//        cout << "Text file open error!";
-//        CAudioFileIf::destroy(phAudioFile);
-//        return -1;
-//    }
-    
-    
     //Format filter and setup output wav file
     CCombFilterIf::create(pCombFilter);
     pCombFilter->init(combType, maxDelay, stFileSpec.fSampleRateInHz, stFileSpec.iNumChannels);
@@ -172,18 +158,6 @@ int main(int argc, char* argv[])
 
         // read data (iNumOfFrames might be updated!)
         phAudioFile->readData(ppfAudioData, iNumFrames);
-
-//        cout << "\r" << "reading and writing";
-//
-//        // write
-//        for (int i = 0; i < iNumFrames; i++)
-//        {
-//            for (int c = 0; c < stFileSpec.iNumChannels; c++)
-//            {
-//                hOutputFile << ppfAudioData[c][i] << "\t";
-//            }
-//            hOutputFile << endl;
-//        }
         
         //process filtering
         pCombFilter->process(ppfAudioData, ppfAudioOutputData, iNumFrames);
