@@ -10,8 +10,17 @@
 using std::cout;
 using std::endl;
 
-// local function declarations
+//Declarations for local function (tests and filter method)
 void    showClInfo ();
+int filter(std::string sInputFilePath,
+           std::string sOutputFilePath,
+           CCombFilterIf::CombFilterType_t combType,
+           CAudioFileIf::FileSpec_t stFileSpec,
+           clock_t time,
+           int kBlockSize,
+           float gain,
+           float delay,
+           float maxDelay);
 
 /////////////////////////////////////////////////////////////////////////////////
 // main function
@@ -22,30 +31,19 @@ int main(int argc, char* argv[])
                 sOutputFilePath;
 
     //Standard variables
-    static const int kBlockSize = 1024;
     clock_t time = 0;
-
-    //Audio data pointers
-    float **ppfAudioInputData =  0;
-    float **ppfAudioOutputData = 0;
-
-    //Files
-    CAudioFileIf *pInputFile =  0;
-    CAudioFileIf *pOutputFile = 0;
+    static const int kBlockSize = 1024;
     
     //Type vars
-    CAudioFileIf::FileSpec_t stFileSpec;
     CCombFilterIf::CombFilterType_t combType;
+    CAudioFileIf::FileSpec_t stFileSpec;
     
     //Comb value vars
+    float gain;
     float delay;
     float maxDelay = 1;
-    float gain;
-    CCombFilterIf *pCombFilter;
     
     showClInfo();
-    
-    //float                           *pAudioData;
     
     
     
@@ -58,7 +56,12 @@ int main(int argc, char* argv[])
     }
     else
     {
+        //Input path (output path takes this as well)
+        //inputFile.wav
         sInputFilePath = argv[1];
+        int indexOfDot = sInputFilePath.find('.');
+        std::string nonExtent = sInputFilePath.substr(0, indexOfDot);
+        sOutputFilePath = nonExtent + "_comb.wav";
         
         //Filter type
         if (strcmp(argv[2], "fir")) {
@@ -78,6 +81,45 @@ int main(int argc, char* argv[])
     }
     
     
+    //run new filter method (returns int so if filter fails main fails)
+    return filter(sInputFilePath,
+                  sOutputFilePath,
+                  combType,
+                  stFileSpec,
+                  time,
+                  kBlockSize,
+                  gain,
+                  delay,
+                  maxDelay);
+    
+}
+
+
+//Seperated processing of data so that tests can be done easier
+int filter(std::string sInputFilePath,
+           std::string sOutputFilePath,
+           CCombFilterIf::CombFilterType_t combType,
+           CAudioFileIf::FileSpec_t stFileSpec,
+           clock_t time,
+           int kBlockSize,
+           float gain,
+           float delay,
+           float maxDelay)
+{
+    
+    ///////////////////////////////////
+    //Pointer variables
+    
+    //Audio data
+    float **ppfAudioInputData =  0;
+    float **ppfAudioOutputData = 0;
+    
+    //Files
+    CAudioFileIf *pInputFile =  0;
+    CAudioFileIf *pOutputFile = 0;
+    
+    //Comb
+    CCombFilterIf *pCombFilter = 0;
     
     
     
@@ -205,10 +247,11 @@ int main(int argc, char* argv[])
     CCombFilterIf::destroy(pCombFilter);
     
 
-    // all done
+    // all done, call return 0 will be bounced to main
     return 0;
-
+    
 }
+
 
 
 void     showClInfo()
