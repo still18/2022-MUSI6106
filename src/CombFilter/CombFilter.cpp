@@ -81,6 +81,11 @@ float CCombFilterBase::getParam (CCombFilterIf::FilterParam_t eParam) const
 
 Error_t CCombFilterIIR::process(float **ppfInputBuffer, float **ppfOutputBuffer, int iNumberOfFrames)
 {
+    if (m_fGain < -1) {
+        m_fGain = -1;
+    } else if (m_fGain > 1) {
+        m_fGain = 1;
+    }
     for (int a = 0; a < m_iNumChannels; a++) {
         for (int b = 0; b < iNumberOfFrames; b++) {
             ppfOutputBuffer[a][b] = ppfInputBuffer[a][b] + m_fGain * (m_ppRingBuff[a]->getPostInc());
