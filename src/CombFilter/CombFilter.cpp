@@ -79,6 +79,7 @@ float CCombFilterBase::getParam (CCombFilterIf::FilterParam_t eParam) const
     return retVal;
 }
 
+//IIR Process
 Error_t CCombFilterIIR::process(float **ppfInputBuffer, float **ppfOutputBuffer, int iNumberOfFrames)
 {
     if (m_fGain < -1) {
@@ -96,6 +97,7 @@ Error_t CCombFilterIIR::process(float **ppfInputBuffer, float **ppfOutputBuffer,
     return Error_t::kNoError;
 }
 
+//FIR Process
 Error_t CCombFilterFIR::process(float **ppfInputBuffer, float **ppfOutputBuffer, int iNumberOfFrames)
 {
     for (int a = 0; a < m_iNumChannels; a++) {

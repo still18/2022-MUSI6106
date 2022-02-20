@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     //Parse command line arguments
     if (argc < 5)
     {
-        cout << "Missing audio input path!";
+        cout << "Missing audio input path!" << endl;;
         return -1;
     }
     else
@@ -64,12 +64,20 @@ int main(int argc, char* argv[])
         sOutputFilePath = nonExtent + "_comb.wav";
         
         //Filter type
-        if (strcmp(argv[2], "fir")) {
+        if (strcmp(argv[2], "fir") == 0) {
+            cout << "FIR comb filter selected" << endl;
             combType = CCombFilterIf::kCombFIR;
-        } else if (strcmp(argv[2], "iir")) {
+        } else if (strcmp(argv[2], "iir") == 0) {
+            cout << "IIR comb filter selected" << endl;
             combType = CCombFilterIf::kCombIIR;
+        } else if (strcmp(argv[2], "TEST") == 0) {
+            cout << "RUNNING TESTS:" << endl;
+            
+            cout << "TESTS COMPLETE. ENDING RUN" << endl;
+            return 0;
         } else {
-            cout << "INCORRECT FILTER TYPE: please enter \"fir\" or \"iir\"";
+            cout << "INCORRECT FILTER TYPE: please enter \"fir\" or \"iir\" (or \"TEST\" for test functions)";
+            return -1;
         }
         
         //Delay length in seconds
@@ -80,8 +88,7 @@ int main(int argc, char* argv[])
         
     }
     
-    
-    //run new filter method (returns int so if filter fails main fails)
+    //Run new filter method (returns int so if filter fails main fails)
     return filter(sInputFilePath,
                   sOutputFilePath,
                   combType,
@@ -157,8 +164,6 @@ int filter(std::string sInputFilePath,
     
     CCombFilterIf::FilterParam_t gainParam = CCombFilterIf::kParamGain;
     pCombFilter->setParam(gainParam, gain);
-    
-    
     
     
     

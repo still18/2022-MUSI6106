@@ -87,6 +87,7 @@ Error_t CCombFilterIf::init (CombFilterType_t eFilterType, float fMaxDelayLength
     
     switch (eFilterType)
     {
+        //TODO: Fix selection
         case (kCombFIR):
             //call FIR constructor
             m_pCCombFilter = new CCombFilterFIR(maxDelayInSamples, iNumChannels);
@@ -105,6 +106,10 @@ Error_t CCombFilterIf::init (CombFilterType_t eFilterType, float fMaxDelayLength
 
 Error_t CCombFilterIf::reset ()
 {
+    //If sample rate hasn't been set, make default of 44100
+    if (m_fSampleRate == 0) {
+        m_fSampleRate = 44100;
+    }
     init(m_tFliterType, 1.0, m_fSampleRate, 1);
     return Error_t::kNoError;
 }
