@@ -63,11 +63,11 @@ int main(int argc, char* argv[])
         
         //Test 1
         std::string test1Input = "pureSine440.wav";
-        //test1(test1Input, PATH_TO_DIR, time);
+        test1(test1Input, PATH_TO_DIR, time);
         
         //Test 2
         std::string test2Input = "pureSine220.wav";
-        //test2(test2Input, PATH_TO_DIR, time);
+        test2(test2Input, PATH_TO_DIR, time);
         
         //Test 3
         std::string test3Input = "pureSine440.wav";
@@ -76,12 +76,12 @@ int main(int argc, char* argv[])
         
         //Test 4
         std::string test4Input = "supposedSilence.wav";
-        //test4(test4Input, PATH_TO_DIR, time, CCombFilterIf::kCombFIR);
-        //test4(test4Input, PATH_TO_DIR, time, CCombFilterIf::kCombIIR);
+        test4(test4Input, PATH_TO_DIR, time, CCombFilterIf::kCombFIR);
+        test4(test4Input, PATH_TO_DIR, time, CCombFilterIf::kCombIIR);
         
         //Test 5 (custom: checks to make sure FIR and IIR are not same)
         std::string test5Input = "pureSine440.wav";
-        //test5(test5Input, PATH_TO_DIR, time);
+        test5(test5Input, PATH_TO_DIR, time);
         
         cout << "\n-TESTS CONCLUDED-" << endl;
         //tests finished, return
@@ -92,8 +92,9 @@ int main(int argc, char* argv[])
     } else {
         //Input path (output path takes this as well)
         sInputFilePath = PATH_TO_DIR + argv[1];
-        int indexOfDot = sInputFilePath.find('.');
-        std::string nonExtent = sInputFilePath.substr(0, indexOfDot);
+        std::string s = argv[1];
+        int indexOfDot = s.find('.');
+        std::string nonExtent = s.substr(0, indexOfDot);
         sOutputFilePath = PATH_TO_DIR + nonExtent + "_comb.wav";
         
         //Filter type
@@ -366,8 +367,8 @@ void test2(std::string inputFileName, std::string pathToDir, clock_t time)
     
     //Set output path
     std::string sInputFilePath = pathToDir + inputFileName;
-    int indexOfDot = sInputFilePath.find('.');
-    std::string nonExtent = sInputFilePath.substr(0, indexOfDot);
+    int indexOfDot = inputFileName.find('.');
+    std::string nonExtent = inputFileName.substr(0, indexOfDot);
     std::string sOutputFilePath = pathToDir + nonExtent + "_combTEST2.wav";
     
     //Preset vars
@@ -462,8 +463,8 @@ void test3(std::string inputFileName, std::string pathToDir, clock_t time, CComb
     
     //Set output(s) path
     std::string sInputFilePath = pathToDir + inputFileName;
-    int indexOfDot = sInputFilePath.find('.');
-    std::string nonExtent = sInputFilePath.substr(0, indexOfDot);
+    int indexOfDot = inputFileName.find('.');
+    std::string nonExtent = inputFileName.substr(0, indexOfDot);
     std::string a_sOutputFilePath = pathToDir + nonExtent + "_combTEST3A.wav";
     std::string b_sOutputFilePath = pathToDir + nonExtent + "_combTEST3B.wav";
     
@@ -561,8 +562,8 @@ void test4(std::string inputFileName, std::string pathToDir, clock_t time, CComb
     
     //Set output path
     std::string sInputFilePath = pathToDir + inputFileName;
-    int indexOfDot = sInputFilePath.find('.');
-    std::string nonExtent = sInputFilePath.substr(0, indexOfDot);
+    int indexOfDot = inputFileName.find('.');
+    std::string nonExtent = inputFileName.substr(0, indexOfDot);
     std::string sOutputFilePath = pathToDir + nonExtent + "_combTEST4.wav";
     
     //Preset vars
@@ -634,8 +635,8 @@ void test5(std::string inputFileName, std::string pathToDir, clock_t time)
     
     //Set output(s) path
     std::string sInputFilePath = pathToDir + inputFileName;
-    int indexOfDot = sInputFilePath.find('.');
-    std::string nonExtent = sInputFilePath.substr(0, indexOfDot);
+    int indexOfDot = inputFileName.find('.');
+    std::string nonExtent = inputFileName.substr(0, indexOfDot);
     std::string a_sOutputFilePath = pathToDir + nonExtent + "_combTEST5FIR.wav";
     std::string b_sOutputFilePath = pathToDir + nonExtent + "_combTEST5IIR.wav";
     
@@ -700,7 +701,7 @@ void test5(std::string inputFileName, std::string pathToDir, clock_t time)
             }
         }
     }
-    if (!ruined) {
+    if (ruined) {
         cout << "TEST 5 FAILED: NO DIFFERENCES DETECTED" << endl;
     }
     
