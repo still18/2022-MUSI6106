@@ -15,12 +15,18 @@ void    showClInfo ();
 int filter(std::string sInputFilePath,
            std::string sOutputFilePath,
            CCombFilterIf::CombFilterType_t combType,
-           CAudioFileIf::FileSpec_t stFileSpec,
            clock_t time,
            int kBlockSize,
            float gain,
            float delay,
            float maxDelay);
+void test1(std::string inputFileName, std::string pathToDir, clock_t time);
+void test2(std::string inputFileName, std::string pathToDir, clock_t time);
+void test3(std::string inputFileName, std::string pathToDir, clock_t time,
+           CCombFilterIf::CombFilterType_t combType);
+void test4(std::string inputFileName, std::string pathToDir, clock_t time,
+           CCombFilterIf::CombFilterType_t combType);
+void test5(std::string inputFileName, std::string pathToDir, clock_t time);
 
 /////////////////////////////////////////////////////////////////////////////////
 // main function
@@ -36,12 +42,14 @@ int main(int argc, char* argv[])
     
     //Type vars
     CCombFilterIf::CombFilterType_t combType;
-    CAudioFileIf::FileSpec_t stFileSpec;
     
     //Comb value vars
     float gain;
     float delay;
     float maxDelay = 1;
+    
+    //Adjust local/global path to the files below:
+    std::string const PATH_TO_DIR = "../../";
     
     showClInfo();
     
@@ -49,32 +57,54 @@ int main(int argc, char* argv[])
     
     ////////////////////////////////////////////////////////////////
     //Parse command line arguments
-    if (argc < 5)
-    {
-        cout << "Missing audio input path!" << endl;;
+    if (argc == 1) {
+        //RUN TESTS
+        cout << "\n-RUNNING TESTS-" << endl;
+        
+        //Test 1
+        std::string test1Input = "pureSine440.wav";
+        //test1(test1Input, PATH_TO_DIR, time);
+        
+        //Test 2
+        std::string test2Input = "pureSine220.wav";
+        //test2(test2Input, PATH_TO_DIR, time);
+        
+        //Test 3
+        std::string test3Input = "pureSine440.wav";
+        test3(test3Input, PATH_TO_DIR, time, CCombFilterIf::kCombFIR);
+        test3(test3Input, PATH_TO_DIR, time, CCombFilterIf::kCombIIR);
+        
+        //Test 4
+        std::string test4Input = "supposedSilence.wav";
+        //test4(test4Input, PATH_TO_DIR, time, CCombFilterIf::kCombFIR);
+        //test4(test4Input, PATH_TO_DIR, time, CCombFilterIf::kCombIIR);
+        
+        //Test 5 (custom: checks to make sure FIR and IIR are not same)
+        std::string test5Input = "pureSine440.wav";
+        //test5(test5Input, PATH_TO_DIR, time);
+        
+        cout << "\n-TESTS CONCLUDED-" << endl;
+        //tests finished, return
+        return 0;
+    } else if (argc < 5) {
+        cout << "Missing args!" << endl;;
         return -1;
-    }
-    else
-    {
+    } else {
         //Input path (output path takes this as well)
-        //inputFile.wav
-        sInputFilePath = argv[1];
+        sInputFilePath = PATH_TO_DIR + argv[1];
         int indexOfDot = sInputFilePath.find('.');
         std::string nonExtent = sInputFilePath.substr(0, indexOfDot);
-        sOutputFilePath = nonExtent + "_comb.wav";
+        sOutputFilePath = PATH_TO_DIR + nonExtent + "_comb.wav";
         
         //Filter type
         if (strcmp(argv[2], "fir") == 0) {
+            //FIR
             cout << "FIR comb filter selected" << endl;
             combType = CCombFilterIf::kCombFIR;
         } else if (strcmp(argv[2], "iir") == 0) {
+            //IIR
             cout << "IIR comb filter selected" << endl;
             combType = CCombFilterIf::kCombIIR;
-        } else if (strcmp(argv[2], "TEST") == 0) {
-            cout << "RUNNING TESTS:" << endl;
-            
-            cout << "TESTS COMPLETE. ENDING RUN" << endl;
-            return 0;
         } else {
             cout << "INCORRECT FILTER TYPE: please enter \"fir\" or \"iir\" (or \"TEST\" for test functions)";
             return -1;
@@ -92,7 +122,6 @@ int main(int argc, char* argv[])
     return filter(sInputFilePath,
                   sOutputFilePath,
                   combType,
-                  stFileSpec,
                   time,
                   kBlockSize,
                   gain,
@@ -106,7 +135,6 @@ int main(int argc, char* argv[])
 int filter(std::string sInputFilePath,
            std::string sOutputFilePath,
            CCombFilterIf::CombFilterType_t combType,
-           CAudioFileIf::FileSpec_t stFileSpec,
            clock_t time,
            int kBlockSize,
            float gain,
@@ -128,6 +156,9 @@ int filter(std::string sInputFilePath,
     //Comb
     CCombFilterIf *pCombFilter = 0;
     
+    //File spec (not pointer)
+    CAudioFileIf::FileSpec_t stFileSpec;
+    
     
     
     //////////////////////////////////////////////
@@ -147,7 +178,7 @@ int filter(std::string sInputFilePath,
     
     //Open/create the "combed" wav output
     CAudioFileIf::create(pOutputFile);
-    pOutputFile->openFile((sInputFilePath + "_comb.wav"), CAudioFileIf::kFileWrite, &stFileSpec);
+    pOutputFile->openFile(sOutputFilePath, CAudioFileIf::kFileWrite, &stFileSpec);
     if (!pOutputFile->isOpen())
     {
         cout << "Wav file open error!";
@@ -256,6 +287,443 @@ int filter(std::string sInputFilePath,
     return 0;
     
 }
+
+void test1(std::string inputFileName, std::string pathToDir, clock_t time)
+{
+    //Test 1: Run FIR, should pass if 1 single tone with no pitch variation
+    
+    //Set output path
+    std::string sInputFilePath = pathToDir + inputFileName;
+    int indexOfDot = inputFileName.find('.');
+    std::string nonExtent = inputFileName.substr(0, indexOfDot);
+    std::string sOutputFilePath = pathToDir + nonExtent + "_combTEST1.wav";
+    
+    //Preset vars
+    CCombFilterIf::CombFilterType_t combFilterType = CCombFilterIf::CombFilterType_t::kCombFIR;
+    int kBlockSize = 1024;
+    float delay = 1;
+    float gain = 1;
+    
+    //Run filter with set params
+    filter(sInputFilePath, sOutputFilePath, combFilterType, time, kBlockSize, gain, delay, 1);
+    
+    //Reopen the newly created file to read
+    CAudioFileIf *pCheckedFile = 0;
+    CAudioFileIf::FileSpec_t checkedFileSpec;
+    float **ppCheckedAudioData = 0;
+    
+    CAudioFileIf::create(pCheckedFile);
+    pCheckedFile->openFile(sOutputFilePath, CAudioFileIf::kFileRead);
+    pCheckedFile->getFileSpec(checkedFileSpec);
+    
+    ppCheckedAudioData = new float*[checkedFileSpec.iNumChannels];
+    for (int a = 0; a < checkedFileSpec.iNumChannels; a++) {
+        ppCheckedAudioData[a] = new float[kBlockSize];
+    }
+    
+    //Read input and check if to see if everything is 0
+    bool ruined = false;
+    while (!pCheckedFile->isEof() && !ruined) {
+        long long frames = kBlockSize;
+        pCheckedFile->readData(ppCheckedAudioData, frames);
+        for (int b = 0; b < checkedFileSpec.iNumChannels; b++)
+        {
+            if (ruined)
+            {
+                break;
+            }
+            for (int c = 0; c < frames; c++)
+            {
+                if (ppCheckedAudioData[b][c] != 0)
+                {
+                    //Test is failed, can skip the rest
+                    ruined = true;
+                    cout << "TEST 1 FALIED: DATA NOT ALL ZERO" << endl;
+                    break;
+                }
+            }
+        }
+    }
+    if (!ruined) {
+        cout << "TEST 1 PASSED" << endl;
+    }
+    
+    //Close files, free memory
+    for (int a = 0; a < checkedFileSpec.iNumChannels; a++)
+    {
+        delete [] ppCheckedAudioData[a];
+    }
+    delete [] ppCheckedAudioData;
+    ppCheckedAudioData = 0;
+    
+    CAudioFileIf::destroy(pCheckedFile);
+    
+}
+
+void test2(std::string inputFileName, std::string pathToDir, clock_t time)
+{
+    //Test 2: Run IIR, check magnitude with original if no pitch variation
+    
+    //Set output path
+    std::string sInputFilePath = pathToDir + inputFileName;
+    int indexOfDot = sInputFilePath.find('.');
+    std::string nonExtent = sInputFilePath.substr(0, indexOfDot);
+    std::string sOutputFilePath = pathToDir + nonExtent + "_combTEST2.wav";
+    
+    //Preset vars
+    CCombFilterIf::CombFilterType_t combFilterType = CCombFilterIf::CombFilterType_t::kCombIIR;
+    int kBlockSize = 1024;
+    float delay = 1;
+    float gain = 1;
+    
+    //Run filter with set params
+    filter(sInputFilePath, sOutputFilePath, combFilterType, time, kBlockSize, gain, delay, 1);
+    
+    //Reopen the newly created file to read
+    CAudioFileIf *pCheckedFile = 0;
+    CAudioFileIf::FileSpec_t checkedFileSpec;
+    float **ppCheckedAudioData = 0;
+    
+    CAudioFileIf::create(pCheckedFile);
+    pCheckedFile->openFile(sOutputFilePath, CAudioFileIf::kFileRead);
+    pCheckedFile->getFileSpec(checkedFileSpec);
+    
+    ppCheckedAudioData = new float*[checkedFileSpec.iNumChannels];
+    for (int a = 0; a < checkedFileSpec.iNumChannels; a++) {
+        ppCheckedAudioData[a] = new float[kBlockSize];
+    }
+    
+    //Reopen the already read file to check with combed
+    CAudioFileIf *pOriginalFile = 0;
+    CAudioFileIf::FileSpec_t originalFileSpec;
+    float **ppOriginalAudioData = 0;
+    
+    CAudioFileIf::create(pOriginalFile);
+    pOriginalFile->openFile(sInputFilePath, CAudioFileIf::kFileRead);
+    pOriginalFile->getFileSpec(originalFileSpec);
+    
+    ppOriginalAudioData = new float*[originalFileSpec.iNumChannels];
+    for (int a = 0; a < originalFileSpec.iNumChannels; a++) {
+        ppOriginalAudioData[a] = new float[kBlockSize];
+    }
+    
+    //Read input of both and find the difference
+    bool ruined = false;
+    while (!pCheckedFile->isEof() && !ruined) {
+        long long frames = kBlockSize;
+        pCheckedFile->readData(ppCheckedAudioData, frames);
+        pOriginalFile->readData(ppOriginalAudioData, frames);
+        for (int b = 0; b < checkedFileSpec.iNumChannels; b++)
+        {
+            if (ruined)
+            {
+                break;
+            }
+            for (int c = 0; c < frames; c++)
+            {
+                //Check for difference but must include compensation for the gain increase with the added signal the comb has
+                if ((ppCheckedAudioData[b][c] - ((1 / 1 - gain) * ppOriginalAudioData[b][c])) != 0)
+                {
+                    //Test is failed, can skip the rest
+                    ruined = true;
+                    cout << "TEST 2 FALIED: DATA NOT SAME" << endl;
+                    break;
+                }
+            }
+        }
+    }
+    if (!ruined) {
+        cout << "TEST 2 PASSED" << endl;
+    }
+    
+    //Close files, free memory
+    for (int a = 0; a < checkedFileSpec.iNumChannels; a++)
+    {
+        delete [] ppCheckedAudioData[a];
+    }
+    delete [] ppCheckedAudioData;
+    ppCheckedAudioData = 0;
+    
+    for (int a = 0; a < originalFileSpec.iNumChannels; a++)
+    {
+        delete [] ppOriginalAudioData[a];
+    }
+    delete [] ppOriginalAudioData;
+    ppOriginalAudioData = 0;
+    
+    CAudioFileIf::destroy(pCheckedFile);
+    CAudioFileIf::destroy(pOriginalFile);
+    
+}
+
+void test3(std::string inputFileName, std::string pathToDir, clock_t time, CCombFilterIf::CombFilterType_t combType)
+{
+    //Test 3: Run either type, check results with varying block size
+    
+    //Set output(s) path
+    std::string sInputFilePath = pathToDir + inputFileName;
+    int indexOfDot = sInputFilePath.find('.');
+    std::string nonExtent = sInputFilePath.substr(0, indexOfDot);
+    std::string a_sOutputFilePath = pathToDir + nonExtent + "_combTEST3A.wav";
+    std::string b_sOutputFilePath = pathToDir + nonExtent + "_combTEST3B.wav";
+    
+    //Preset vars
+    CCombFilterIf::CombFilterType_t combFilterType = combType;
+    int a_kBlockSize = 512;
+    int b_kBlockSize = 1024;
+    float delay = 1;
+    float gain = 1;
+    
+    //Run filter with set params, once per block size
+    filter(sInputFilePath, a_sOutputFilePath, combFilterType, time, a_kBlockSize, gain, delay, 1);
+    filter(sInputFilePath, b_sOutputFilePath, combFilterType, time, b_kBlockSize, gain, delay, 1);
+    
+    //Reopen the file for block size A
+    CAudioFileIf *a_pCheckedFile = 0;
+    CAudioFileIf::FileSpec_t a_checkedFileSpec;
+    float **a_ppCheckedAudioData = 0;
+    
+    CAudioFileIf::create(a_pCheckedFile);
+    a_pCheckedFile->openFile(a_sOutputFilePath, CAudioFileIf::kFileRead);
+    a_pCheckedFile->getFileSpec(a_checkedFileSpec);
+    
+    a_ppCheckedAudioData = new float*[a_checkedFileSpec.iNumChannels];
+    for (int a = 0; a < a_checkedFileSpec.iNumChannels; a++) {
+        a_ppCheckedAudioData[a] = new float[a_kBlockSize];
+    }
+    
+    //Reopen the file for block size B
+    CAudioFileIf *b_pCheckedFile = 0;
+    CAudioFileIf::FileSpec_t b_checkedFileSpec;
+    float **b_ppCheckedAudioData = 0;
+    
+    CAudioFileIf::create(b_pCheckedFile);
+    b_pCheckedFile->openFile(b_sOutputFilePath, CAudioFileIf::kFileRead);
+    b_pCheckedFile->getFileSpec(b_checkedFileSpec);
+    
+    b_ppCheckedAudioData = new float*[b_checkedFileSpec.iNumChannels];
+    for (int z = 0; z < b_checkedFileSpec.iNumChannels; z++) {
+        b_ppCheckedAudioData[z] = new float[b_kBlockSize];
+    }
+    
+    //Read input of both and find the difference
+    bool ruined = false;
+    while (!a_pCheckedFile->isEof() && !ruined) {
+        long long frames = b_kBlockSize;
+        a_pCheckedFile->readData(a_ppCheckedAudioData, frames);
+        b_pCheckedFile->readData(b_ppCheckedAudioData, frames);
+        for (int x = 0; x < b_checkedFileSpec.iNumChannels; x++)
+        {
+            if (ruined)
+            {
+                break;
+            }
+            for (int y = 0; y < frames; y++)
+            {
+                //Compare equality among consistent (larger) block size
+                if (a_ppCheckedAudioData[x][y] != b_ppCheckedAudioData[x][y])
+                {
+                    //Test is failed, can skip the rest
+                    ruined = true;
+                    cout << "TEST 3 FALIED: DATA NOT SAME" << endl;
+                    break;
+                }
+            }
+        }
+    }
+    if (!ruined) {
+        cout << "TEST 3 PASSED" << endl;
+    }
+    
+    //Close files, free memory
+    for (int z = 0; z < a_checkedFileSpec.iNumChannels; z++)
+    {
+        delete [] a_ppCheckedAudioData[z];
+    }
+    delete [] a_ppCheckedAudioData;
+    a_ppCheckedAudioData = 0;
+    
+    for (int z = 0; z < b_checkedFileSpec.iNumChannels; z++)
+    {
+        delete [] b_ppCheckedAudioData[z];
+    }
+    delete [] b_ppCheckedAudioData;
+    b_ppCheckedAudioData = 0;
+    
+    CAudioFileIf::destroy(a_pCheckedFile);
+    CAudioFileIf::destroy(b_pCheckedFile);
+    
+}
+
+void test4(std::string inputFileName, std::string pathToDir, clock_t time, CCombFilterIf::CombFilterType_t combType)
+{
+    //Test 4: Run either, with a completely silent file
+    
+    //Set output path
+    std::string sInputFilePath = pathToDir + inputFileName;
+    int indexOfDot = sInputFilePath.find('.');
+    std::string nonExtent = sInputFilePath.substr(0, indexOfDot);
+    std::string sOutputFilePath = pathToDir + nonExtent + "_combTEST4.wav";
+    
+    //Preset vars
+    CCombFilterIf::CombFilterType_t combFilterType = combType;
+    int kBlockSize = 1024;
+    float delay = 1;
+    float gain = 0;
+    
+    //Run filter with set params
+    filter(sInputFilePath, sOutputFilePath, combFilterType, time, kBlockSize, gain, delay, 1);
+    
+    //Reopen the newly created file to read
+    CAudioFileIf *pCheckedFile = 0;
+    CAudioFileIf::FileSpec_t checkedFileSpec;
+    float **ppCheckedAudioData = 0;
+    
+    CAudioFileIf::create(pCheckedFile);
+    pCheckedFile->openFile(sOutputFilePath, CAudioFileIf::kFileRead);
+    pCheckedFile->getFileSpec(checkedFileSpec);
+    
+    ppCheckedAudioData = new float*[checkedFileSpec.iNumChannels];
+    for (int a = 0; a < checkedFileSpec.iNumChannels; a++) {
+        ppCheckedAudioData[a] = new float[kBlockSize];
+    }
+    
+    //Read input and check if to see if everything is 0
+    bool ruined = false;
+    while (!pCheckedFile->isEof() && !ruined) {
+        long long frames = kBlockSize;
+        pCheckedFile->readData(ppCheckedAudioData, frames);
+        for (int b = 0; b < checkedFileSpec.iNumChannels; b++)
+        {
+            if (ruined)
+            {
+                break;
+            }
+            for (int c = 0; c < frames; c++)
+            {
+                //Check if not 0? seems like first test but this makes sense
+                if (ppCheckedAudioData[b][c] != 0)
+                {
+                    //Test is failed, can skip the rest
+                    ruined = true;
+                    cout << "TEST 4 FALIED: DATA NOT ALL ZERO" << endl;
+                    break;
+                }
+            }
+        }
+    }
+    if (!ruined) {
+        cout << "TEST 4 PASSED" << endl;
+    }
+    
+    //Close files, free memory
+    for (int a = 0; a < checkedFileSpec.iNumChannels; a++)
+    {
+        delete [] ppCheckedAudioData[a];
+    }
+    delete [] ppCheckedAudioData;
+    ppCheckedAudioData = 0;
+    
+    CAudioFileIf::destroy(pCheckedFile);
+    
+}
+
+void test5(std::string inputFileName, std::string pathToDir, clock_t time)
+{
+    //Test 5: Run both types, compare for difference
+    
+    //Set output(s) path
+    std::string sInputFilePath = pathToDir + inputFileName;
+    int indexOfDot = sInputFilePath.find('.');
+    std::string nonExtent = sInputFilePath.substr(0, indexOfDot);
+    std::string a_sOutputFilePath = pathToDir + nonExtent + "_combTEST5FIR.wav";
+    std::string b_sOutputFilePath = pathToDir + nonExtent + "_combTEST5IIR.wav";
+    
+    //Preset vars
+    int kBlockSize = 1024;
+    float delay = 1;
+    float gain = 1;
+    
+    //Run filter with set params, once per type
+    filter(sInputFilePath, a_sOutputFilePath, CCombFilterIf::CombFilterType_t::kCombFIR, time, kBlockSize, gain, delay, 1);
+    filter(sInputFilePath, b_sOutputFilePath, CCombFilterIf::CombFilterType_t::kCombIIR, time, kBlockSize, gain, delay, 1);
+    
+    //Reopen the file for FIR
+    CAudioFileIf *a_pCheckedFile = 0;
+    CAudioFileIf::FileSpec_t a_checkedFileSpec;
+    float **a_ppCheckedAudioData = 0;
+    
+    CAudioFileIf::create(a_pCheckedFile);
+    a_pCheckedFile->openFile(a_sOutputFilePath, CAudioFileIf::kFileRead);
+    a_pCheckedFile->getFileSpec(a_checkedFileSpec);
+    
+    a_ppCheckedAudioData = new float*[a_checkedFileSpec.iNumChannels];
+    for (int a = 0; a < a_checkedFileSpec.iNumChannels; a++) {
+        a_ppCheckedAudioData[a] = new float[kBlockSize];
+    }
+    
+    //Reopen the file for IIR
+    CAudioFileIf *b_pCheckedFile = 0;
+    CAudioFileIf::FileSpec_t b_checkedFileSpec;
+    float **b_ppCheckedAudioData = 0;
+    
+    CAudioFileIf::create(b_pCheckedFile);
+    b_pCheckedFile->openFile(b_sOutputFilePath, CAudioFileIf::kFileRead);
+    b_pCheckedFile->getFileSpec(b_checkedFileSpec);
+    
+    b_ppCheckedAudioData = new float*[b_checkedFileSpec.iNumChannels];
+    for (int z = 0; z < b_checkedFileSpec.iNumChannels; z++) {
+        b_ppCheckedAudioData[z] = new float[kBlockSize];
+    }
+    
+    //Read input of both and confirm a difference
+    bool ruined = true;
+    while (!a_pCheckedFile->isEof() && ruined) {
+        long long frames = kBlockSize;
+        a_pCheckedFile->readData(a_ppCheckedAudioData, frames);
+        b_pCheckedFile->readData(b_ppCheckedAudioData, frames);
+        for (int x = 0; x < b_checkedFileSpec.iNumChannels; x++)
+        {
+            if (!ruined) {
+                break;
+            }
+            for (int y = 0; y < frames; y++)
+            {
+                //Compare equality among consistent (larger) block size
+                if (a_ppCheckedAudioData[x][y] != b_ppCheckedAudioData[x][y])
+                {
+                    //Test is a success, can skip the rest
+                    ruined = false;
+                    cout << "TEST 5 PASSED" << endl;
+                    break;
+                }
+            }
+        }
+    }
+    if (!ruined) {
+        cout << "TEST 5 FAILED: NO DIFFERENCES DETECTED" << endl;
+    }
+    
+    //Close files, free memory
+    for (int z = 0; z < a_checkedFileSpec.iNumChannels; z++)
+    {
+        delete [] a_ppCheckedAudioData[z];
+    }
+    delete [] a_ppCheckedAudioData;
+    a_ppCheckedAudioData = 0;
+    
+    for (int z = 0; z < b_checkedFileSpec.iNumChannels; z++)
+    {
+        delete [] b_ppCheckedAudioData[z];
+    }
+    delete [] b_ppCheckedAudioData;
+    b_ppCheckedAudioData = 0;
+    
+    CAudioFileIf::destroy(a_pCheckedFile);
+    CAudioFileIf::destroy(b_pCheckedFile);
+    
+}
+
 
 
 
